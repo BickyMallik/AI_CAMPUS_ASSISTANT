@@ -44,11 +44,11 @@ cp .env.example .env
 # Now edit .env with your MySQL credentials
 ```
 
-### Step 4 — Get FREE Groq API Key (2 minutes)
-1. Go to https://console.groq.com
-2. Sign up (no credit card required)
-3. Click "API Keys" → "Create API Key"
-4. Paste the key in `.env` as `GROQ_API_KEY=gsk_...`
+## Step 4 — Get FREE OpenRouter API Key (2 minutes)
+1. Go to https://openrouter.ai
+2. Sign up with Google (no credit card required)
+3. Click "API Keys" → "Create Key"
+4. Paste the key in `.env` as `OPENROUTER_API_KEY=sk-or-...`
 
 ### Step 5 — Start the server
 ```bash
@@ -65,16 +65,12 @@ uvicorn main:app --reload --port 8000
 
 ---
 
-## 🤖 AI Provider — Why Groq?
-
 | Provider | Free Tier | Quota Issue | Speed |
 |----------|-----------|-------------|-------|
-| Gemini   | ❌ 0 requests (your issue) | Yes | Fast |
-| OpenAI   | ❌ Requires payment | Sometimes | Fast |
-| **Groq** | ✅ 14,400 req/day free | No | Ultra-fast |
-| Ollama   | ✅ Fully local | No | Slow on CPU |
-
-**Groq Llama 3** gives 14,400 free requests/day — perfect for demos.
+| Gemini | ❌ 0 requests (quota blocked) | Yes | Fast |
+| OpenAI | ❌ Requires payment | Sometimes | Fast |
+| Groq | ❌ Email signup issues | Sometimes | Fast |
+| **OpenRouter** | ✅ Free models, no card | No | Fast |
 
 ---
 
