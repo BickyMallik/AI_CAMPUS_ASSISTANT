@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — AI Campus Assistant</title>
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body class="admin-body">
+
+<!-- ── AUTH SCREEN ────────────────────────────────────────────────────── -->
+<div id="authScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🎓</div>
+    <h2>AI Campus Assistant</h2>
+    <p class="login-sub">Administration Portal</p>
+
+    <!-- Tab switcher -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="loginTab" onclick="switchTab('login')">Login</button>
+      <button class="auth-tab" id="signupTab" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <div id="authError" class="error-banner" style="display:none"></div>
+    <div id="authSuccess" class="success-banner" style="display:none"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="admin@college.edu">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary full-width" onclick="doLogin()">🔓 Login</button>
+      <p style="text-align:center;margin-top:1rem;font-size:0.85rem;color:var(--muted)">
+        Don't have an account? <a href="#" onclick="switchTab('signup')" style="color:var(--primary)">Sign Up</a>
+      </p>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signupForm" style="display:none">
+      <div class="form-group">
+        <label>College Name *</label>
+        <input type="text" id="signupCollege" placeholder="e.g. BBIT Kolkata" oninput="previewSlug()">
+        <small id="slugPreview" style="color:var(--primary);font-size:0.8rem;margin-top:0.25rem;display:block"></small>
+      </div>
+      <div class="form-group">
+        <label>Admin Email *</label>
+        <input type="email" id="signupEmail" placeholder="admin@college.edu">
+      </div>
+      <div class="form-group">
+        <label>Password *</label>
+        <input type="password" id="signupPassword" placeholder="Minimum 6 characters">
+      </div>
+      <div class="form-group">
+        <label>Confirm Password *</label>
+        <input type="password" id="signupConfirm" placeholder="Re-enter password" onkeydown="if(event.key==='Enter')doSignup()">
+      </div>
+      <button class="btn btn-primary full-width" onclick="doSignup()">🎓 Create Account</button>
+      <p style="text-align:center;margin-top:1rem;font-size:0.85rem;color:var(--muted)">
+        Already have an account? <a href="#" onclick="switchTab('login')" style="color:var(--primary)">Login</a>
+      </p>
+    </div>
+
+    <a href="index.html" style="display:block;text-align:center;margin-top:1rem;font-size:0.85rem;color:var(--muted)">← Back to Student Portal</a>
+  </div>
+</div>
+
+<!-- ── PORTAL LINK MODAL (shown after signup) ─────────────────────────── -->
+<div id="portalModal" class="update-modal" style="display:none">
+  <div class="update-card">
+    <h3>🎉 Account Created!</h3>
+    <p style="color:var(--muted);font-size:0.87rem;margin:0.5rem 0 1rem">Share these links with your students and staff:</p>
+    <div class="form-group">
+      <label>Student Portal Link</label>
+      <div class="copy-row">
+        <input type="text" id="studentPortalLink" readonly>
+        <button class="btn btn-outline" onclick="copyLink('studentPortalLink')">Copy</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Admin Login Link</label>
+      <div class="copy-row">
+        <input type="text" id="adminPortalLink" readonly>
+        <button class="btn btn-outline" onclick="copyLink('adminPortalLink')">Copy</button>
+      </div>
+    </div>
+    <p style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem">⚠️ Save these links. Students must use the Student Portal Link to submit grievances.</p>
+    <button class="btn btn-primary full-width" onclick="closePortalModal()" style="margin-top:1rem">Go to Dashboard →</button>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ──────────────────────────────────────────────────────── -->
+<div id="dashboard" style="display:none">
+  <header class="admin-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🎓</span>
+        <span class="logo-text" id="collegeName">Admin <span class="accent">Dashboard</span></span>
+      </div>
+      <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+        <button class="nav-btn" onclick="showPortalLinks()">🔗 Portal Links</button>
+        <a href="index.html" class="nav-btn">Student Portal</a>
+        <button class="nav-btn" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <!-- Stats -->
+    <div class="admin-stats" id="adminStats"></div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3 class="chart-title">Grievances by Status</h3>
+        <canvas id="statusChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3 class="chart-title">Top Categories</h3>
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="admin-controls">
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+        <label style="font-size:0.85rem;color:var(--muted)">Filter:</label>
+        <select id="statusFilter" onchange="loadGrievances()" class="filter-select">
+          <option value="All">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+      </div>
+      <button class="btn btn-outline" onclick="loadGrievances();loadStats()">🔄 Refresh</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+      <table class="grievance-table">
+        <thead>
+          <tr>
+            <th>Ticket</th>
+            <th>Student</th>
+            <th>Department</th>
+            <th>Category</th>
+            <th>Subject</th>
+            <th>Submitted</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- ── UPDATE MODAL ───────────────────────────────────────────────────── -->
+<div id="updateModal" class="update-modal" style="display:none">
+  <div class="update-card">
+    <h3>Update Grievance Status</h3>
+    <p id="modalSubject" class="modal-subject"></p>
+    <input type="hidden" id="modalId">
+    <div class="form-group">
+      <label>New Status</label>
+      <select id="modalStatus">
+        <option value="Pending">Pending</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Resolved">Resolved</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Admin Remarks (optional)</label>
+      <textarea id="modalRemarks" rows="3" placeholder="Add a note for the student..."></textarea>
+    </div>
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1rem">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="updateStatus()">✅ Update</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+let currentSlug = "";
+let statusChartInstance = null;
+let categoryChartInstance = null;
+
+// Read college slug from URL if present
+const urlCollege = urlParams.get("college");
+
+// ─── Auth Tab Switch ─────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById("loginForm").style.display   = tab === "login"  ? "block" : "none";
+  document.getElementById("signupForm").style.display  = tab === "signup" ? "block" : "none";
+  document.getElementById("loginTab").classList.toggle("active",  tab === "login");
+  document.getElementById("signupTab").classList.toggle("active", tab === "signup");
+  clearAuthMessages();
+}
+
+function clearAuthMessages() {
+  document.getElementById("authError").style.display   = "none";
+  document.getElementById("authSuccess").style.display = "none";
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById("authError");
+  el.textContent = msg;
+  el.style.display = "block";
+  document.getElementById("authSuccess").style.display = "none";
+}
+
+function showAuthSuccess(msg) {
+  const el = document.getElementById("authSuccess");
+  el.textContent = msg;
+  el.style.display = "block";
+  document.getElementById("authError").style.display = "none";
+}
+
+// ─── Slug Preview ────────────────────────────────────────────────────────────
+function previewSlug() {
+  const name = document.getElementById("signupCollege").value;
+  const slug = name.replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "-").toUpperCase().trim();
+  document.getElementById("slugPreview").textContent = slug ? `Portal ID: ${slug}` : "";
+}
+
+// ─── Signup ──────────────────────────────────────────────────────────────────
+async function doSignup() {
+  const college  = document.getElementById("signupCollege").value.trim();
+  const email    = document.getElementById("signupEmail").value.trim();
+  const password = document.getElementById("signupPassword").value;
+  const confirm  = document.getElementById("signupConfirm").value;
+
+  if (!college || !email || !password) { showAuthError("All fields are required."); return; }
+  if (password !== confirm)            { showAuthError("Passwords do not match."); return; }
+  if (password.length < 6)            { showAuthError("Password must be at least 6 characters."); return; }
+
+  try {
+    const resp = await fetch(`${API_BASE}/api/admin/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ college_name: college, email, password })
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showAuthError(data.detail || "Signup failed."); return; }
+
+    // Show portal links modal
+    const base = window.location.origin + window.location.pathname.replace("admin.html", "");
+    document.getElementById("studentPortalLink").value = `${base}index.html?college=${data.college_slug}`;
+    document.getElementById("adminPortalLink").value   = `${base}admin.html?college=${data.college_slug}`;
+    document.getElementById("portalModal").style.display = "flex";
+
+    // Auto login
+    currentSlug = data.college_slug;
+    sessionStorage.setItem("adminSlug", currentSlug);
+    sessionStorage.setItem("adminCollege", college);
+
+  } catch { showAuthError("Cannot connect to server."); }
+}
+
+function closePortalModal() {
+  document.getElementById("portalModal").style.display = "none";
+  launchDashboard(sessionStorage.getItem("adminCollege"), sessionStorage.getItem("adminSlug"));
+}
+
+function copyLink(id) {
+  const el = document.getElementById(id);
+  el.select();
+  document.execCommand("copy");
+  alert("Link copied!");
+}
+
+// ─── Login ───────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email    = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  if (!email || !password) { showAuthError("Please enter email and password."); return; }
+
+  try {
+    const resp = await fetch(`${API_BASE}/api/admin/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showAuthError(data.detail || "Login failed."); return; }
+
+    sessionStorage.setItem("adminSlug",    data.college_slug);
+    sessionStorage.setItem("adminCollege", data.college_name);
+    currentSlug = data.college_slug;
+    launchDashboard(data.college_name, data.college_slug);
+  } catch { showAuthError("Cannot connect to server."); }
+}
+
+function doLogout() {
+  sessionStorage.removeItem("adminSlug");
+  sessionStorage.removeItem("adminCollege");
+  currentSlug = "";
+  document.getElementById("dashboard").style.display  = "none";
+  document.getElementById("authScreen").style.display = "flex";
+  clearAuthMessages();
+}
+
+// ─── Dashboard ───────────────────────────────────────────────────────────────
+function launchDashboard(collegeName, slug) {
+  currentSlug = slug;
+  document.getElementById("authScreen").style.display = "none";
+  document.getElementById("dashboard").style.display  = "block";
+  document.getElementById("collegeName").innerHTML =
+    `${collegeName} <span class="accent">Dashboard</span>`;
+  loadStats();
+  loadGrievances();
+}
+
+function showPortalLinks() {
+  const base = window.location.origin + window.location.pathname.replace("admin.html", "");
+  document.getElementById("studentPortalLink").value = `${base}index.html?college=${currentSlug}`;
+  document.getElementById("adminPortalLink").value   = `${base}admin.html?college=${currentSlug}`;
+  document.getElementById("portalModal").style.display = "flex";
+}
+
+// ─── Stats + Charts ──────────────────────────────────────────────────────────
+async function loadStats() {
+  const resp = await fetch(`${API_BASE}/api/admin/stats?college_slug=${currentSlug}`);
+  const data = await resp.json();
+
+  const statusMap = {};
+  (data.by_status || []).forEach(s => statusMap[s.status] = s.count);
+
+  document.getElementById("adminStats").innerHTML = `
+    <div class="stat-box"><div class="stat-num">${data.total}</div><div class="stat-lbl">Total</div></div>
+    <div class="stat-box pending"><div class="stat-num">${statusMap["Pending"] || 0}</div><div class="stat-lbl">Pending</div></div>
+    <div class="stat-box progress"><div class="stat-num">${statusMap["In Progress"] || 0}</div><div class="stat-lbl">In Progress</div></div>
+    <div class="stat-box resolved"><div class="stat-num">${statusMap["Resolved"] || 0}</div><div class="stat-lbl">Resolved</div></div>
+    <div class="stat-box rejected"><div class="stat-num">${statusMap["Rejected"] || 0}</div><div class="stat-lbl">Rejected</div></div>
+  `;
+
+  // Status Doughnut Chart
+  if (statusChartInstance) statusChartInstance.destroy();
+  statusChartInstance = new Chart(document.getElementById("statusChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["Pending", "In Progress", "Resolved", "Rejected"],
+      datasets: [{
+        data: [
+          statusMap["Pending"] || 0,
+          statusMap["In Progress"] || 0,
+          statusMap["Resolved"] || 0,
+          statusMap["Rejected"] || 0
+        ],
+        backgroundColor: ["#FCD34D", "#60A5FA", "#34D399", "#F87171"],
+        borderWidth: 0
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+  });
+
+  // Category Bar Chart
+  if (categoryChartInstance) categoryChartInstance.destroy();
+  const cats  = (data.by_category || []).map(c => c.category);
+  const counts = (data.by_category || []).map(c => c.count);
+  categoryChartInstance = new Chart(document.getElementById("categoryChart"), {
+    type: "bar",
+    data: {
+      labels: cats,
+      datasets: [{
+        label: "Grievances",
+        data: counts,
+        backgroundColor: "#6366F1",
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+}
+
+// ─── Grievances Table ─────────────────────────────────────────────────────────
+async function loadGrievances() {
+  const status = document.getElementById("statusFilter").value;
+  const resp   = await fetch(`${API_BASE}/api/admin/grievances?college_slug=${currentSlug}&status=${encodeURIComponent(status)}`);
+  const data   = await resp.json();
+  const tbody  = document.getElementById("tableBody");
+
+  if (!data.grievances || data.grievances.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">No grievances found.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.grievances.map(g => {
+    const date = new Date(g.submitted_at).toLocaleDateString("en-IN");
+    const sc   = g.status.toLowerCase().replace(" ", "-");
+    return `
+      <tr>
+        <td><span class="ticket-id">TICKET-${String(g.id).padStart(4,"0")}</span></td>
+        <td><strong>${g.student_name}</strong><br><small style="color:var(--muted)">${g.student_roll}</small></td>
+        <td style="font-size:0.8rem">${g.department}</td>
+        <td><span class="cat-tag">${g.category}</span></td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${g.subject}">${g.subject}</td>
+        <td style="font-size:0.82rem;color:var(--muted)">${date}</td>
+        <td><span class="status-badge ${sc}">${g.status}</span></td>
+        <td>
+          <button class="action-btn edit-btn" onclick="openModal(${g.id},'${escHtml(g.subject)}','${g.status}')">✏️</button>
+          <button class="action-btn del-btn"  onclick="deleteGrievance(${g.id})">🗑️</button>
+        </td>
+      </tr>`;
+  }).join("");
+}
+
+function escHtml(s) { return s.replace(/'/g,"\\'"); }
+
+function openModal(id, subject, status) {
+  document.getElementById("modalId").value      = id;
+  document.getElementById("modalSubject").textContent = subject;
+  document.getElementById("modalStatus").value  = status;
+  document.getElementById("modalRemarks").value = "";
+  document.getElementById("updateModal").style.display = "flex";
+}
+function closeModal() { document.getElementById("updateModal").style.display = "none"; }
+
+async function updateStatus() {
+  const id      = document.getElementById("modalId").value;
+  const status  = document.getElementById("modalStatus").value;
+  const remarks = document.getElementById("modalRemarks").value;
+  const resp    = await fetch(`${API_BASE}/api/admin/grievances/${id}/status`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status, admin_remarks: remarks })
+  });
+  const data = await resp.json();
+  if (data.success) { closeModal(); loadGrievances(); loadStats(); }
+}
+
+async function deleteGrievance(id) {
+  if (!confirm("Delete this grievance? This cannot be undone.")) return;
+  const resp = await fetch(`${API_BASE}/api/admin/grievances/${id}`, { method: "DELETE" });
+  const data = await resp.json();
+  if (data.success) { loadGrievances(); loadStats(); }
+}
+
+// ─── Auto Session Restore ─────────────────────────────────────────────────────
+const savedSlug    = sessionStorage.getItem("adminSlug");
+const savedCollege = sessionStorage.getItem("adminCollege");
+if (savedSlug && savedCollege) {
+  launchDashboard(savedCollege, savedSlug);
+} else if (urlCollege) {
+  // Pre-fill login if college slug in URL
+  document.getElementById("loginEmail").focus();
+}
+</script>
+</body>
+</html>

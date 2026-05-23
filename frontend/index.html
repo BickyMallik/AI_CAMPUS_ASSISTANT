@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Campus Assistant</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4F46E5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ── NO COLLEGE WARNING ─────────────────────────────────────────────── -->
+<div id="noCollegeBanner" class="no-college-banner" style="display:none">
+  ⚠️ You are accessing this portal directly. Please use your college's specific link provided by your admin.
+</div>
+
+<!-- ── HEADER ─────────────────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">🎓</span>
+      <span class="logo-text">AI Campus <span class="accent">Assistant</span></span>
+      <!-- College name badge — shown only when ?college= is in URL -->
+      <span id="collegeBadge" class="college-badge" style="display:none">
+        <span id="collegeNameDisplay"></span>
+      </span>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="showSection('home')">Home</button>
+      <button class="nav-btn" onclick="showSection('submit')">Submit</button>
+      <button class="nav-btn" onclick="showSection('track')">Track</button>
+      <a href="admin.html" class="nav-btn admin-link">Admin</a>
+    </nav>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()">☰</button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <button onclick="showSection('home');toggleMenu()">🏠 Home</button>
+    <button onclick="showSection('submit');toggleMenu()">📝 Submit Grievance</button>
+    <button onclick="showSection('track');toggleMenu()">🔍 Track Status</button>
+    <a href="admin.html">🔐 Admin Panel</a>
+  </div>
+</header>
+
+<!-- ── HERO (HOME) ────────────────────────────────────────────────────── -->
+<section id="section-home" class="section active">
+  <div class="hero">
+    <div class="hero-badge">🤖 AI-Powered Support</div>
+    <h1 class="hero-title">Your Campus,<br><span class="gradient-text">Your Voice</span></h1>
+    <p class="hero-sub">Submit grievances, get instant AI assistance, and track your complaints — all in one place. No login required.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="showSection('submit')">📝 Submit Grievance</button>
+      <button class="btn btn-outline" onclick="openChat()">💬 Chat with AI</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num">24/7</div><div class="stat-lbl">AI Support</div></div>
+      <div class="stat-card"><div class="stat-num">0</div><div class="stat-lbl">Login Required</div></div>
+      <div class="stat-card"><div class="stat-num">Fast</div><div class="stat-lbl">Response Time</div></div>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature-card" onclick="showSection('submit')">
+      <div class="feat-icon">📋</div>
+      <h3>Submit Grievance</h3>
+      <p>Report academic, hostel, or administrative issues in seconds.</p>
+      <span class="feat-link">Get Started →</span>
+    </div>
+    <div class="feature-card" onclick="openChat()">
+      <div class="feat-icon">🤖</div>
+      <h3>AI Chatbot</h3>
+      <p>Get instant answers to campus queries powered by AI.</p>
+      <span class="feat-link">Chat Now →</span>
+    </div>
+    <div class="feature-card" onclick="showSection('track')">
+      <div class="feat-icon">🔍</div>
+      <h3>Track Status</h3>
+      <p>Enter your roll number to see all your submitted complaints.</p>
+      <span class="feat-link">Track →</span>
+    </div>
+  </div>
+
+  <div class="categories-section">
+    <h2 class="section-title">Grievance Categories</h2>
+    <div class="categories-grid">
+      <div class="cat-pill">📚 Academic</div>
+      <div class="cat-pill">🏠 Hostel</div>
+      <div class="cat-pill">💰 Fees</div>
+      <div class="cat-pill">📖 Library</div>
+      <div class="cat-pill">🏫 Examination</div>
+      <div class="cat-pill">🔧 Infrastructure</div>
+      <div class="cat-pill">🚌 Transport</div>
+      <div class="cat-pill">🏥 Medical</div>
+      <div class="cat-pill">📡 WiFi / IT</div>
+      <div class="cat-pill">🍽️ Canteen</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SUBMIT GRIEVANCE ───────────────────────────────────────────────── -->
+<section id="section-submit" class="section">
+  <div class="page-header">
+    <button class="back-btn" onclick="showSection('home')">← Back</button>
+    <h2 class="page-title">Submit a Grievance</h2>
+    <p class="page-sub">No login required. Your complaint will be reviewed by the administration.</p>
+  </div>
+
+  <div class="form-card">
+    <div id="submitSuccess" class="success-banner" style="display:none"></div>
+    <div id="submitError" class="error-banner" style="display:none"></div>
+
+    <form id="grievanceForm" onsubmit="submitGrievance(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="studentName" placeholder="e.g. Rahul Sharma" required>
+        </div>
+        <div class="form-group">
+          <label>Roll Number *</label>
+          <input type="text" id="studentRoll" placeholder="e.g. 22CSE045" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Department *</label>
+          <select id="department" required>
+            <option value="">Select Department</option>
+            <option>Computer Science & Engineering</option>
+            <option>Electronics & Communication</option>
+            <option>Mechanical Engineering</option>
+            <option>Civil Engineering</option>
+            <option>Electrical Engineering</option>
+            <option>Information Technology</option>
+            <option>Physics</option>
+            <option>Chemistry</option>
+            <option>Mathematics</option>
+            <option>Management</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Category *</label>
+          <select id="category" required>
+            <option value="">Select Category</option>
+            <option>Academic</option>
+            <option>Hostel</option>
+            <option>Fees & Scholarship</option>
+            <option>Library</option>
+            <option>Examination</option>
+            <option>Infrastructure</option>
+            <option>Transport</option>
+            <option>Medical / Health</option>
+            <option>WiFi / IT</option>
+            <option>Canteen</option>
+            <option>Faculty / Teaching</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Subject *</label>
+        <input type="text" id="subject" placeholder="Brief subject of your grievance" required>
+      </div>
+      <div class="form-group">
+        <label>Description *</label>
+        <textarea id="description" rows="5" placeholder="Describe your issue in detail..." required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Contact Email (optional)</label>
+        <input type="email" id="contactEmail" placeholder="for follow-up notifications">
+      </div>
+      <div class="ai-tip-box">
+        <span>🤖</span>
+        <p>Before submitting, try our <strong>AI Chatbot</strong> — it may resolve your issue instantly!</p>
+        <button type="button" class="btn btn-xs" onclick="openChat()">Ask AI</button>
+      </div>
+      <button type="submit" class="btn btn-primary full-width" id="submitBtn">
+        📩 Submit Grievance
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- ── TRACK STATUS ───────────────────────────────────────────────────── -->
+<section id="section-track" class="section">
+  <div class="page-header">
+    <button class="back-btn" onclick="showSection('home')">← Back</button>
+    <h2 class="page-title">Track Your Grievance</h2>
+    <p class="page-sub">Enter your roll number to view all submitted complaints and their current status.</p>
+  </div>
+
+  <div class="track-card">
+    <div class="track-input-row">
+      <input type="text" id="trackRoll" placeholder="Enter Roll Number (e.g. 22CSE045)" style="flex:1">
+      <button class="btn btn-primary" onclick="trackGrievance()">🔍 Track</button>
+    </div>
+    <div id="trackResults"></div>
+  </div>
+</section>
+
+<!-- ── AI CHATBOT MODAL ───────────────────────────────────────────────── -->
+<div id="chatModal" class="chat-modal" style="display:none">
+  <div class="chat-window">
+    <div class="chat-header">
+      <div class="chat-title">
+        <span class="chat-dot"></span>
+        AI Campus Assistant
+      </div>
+      <button class="chat-close" onclick="closeChat()">✕</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="msg bot-msg">
+        <div class="msg-avatar">🤖</div>
+        <div class="msg-bubble">👋 Hi! I'm your AI Campus Assistant. Ask me anything about academics, hostel, fees, exams, or how to submit a grievance!</div>
+      </div>
+    </div>
+    <div class="chat-quick-btns">
+      <button onclick="sendQuick('How do I submit a grievance?')">Submit grievance?</button>
+      <button onclick="sendQuick('Hostel room complaint')">Hostel issue</button>
+      <button onclick="sendQuick('Fee payment query')">Fee query</button>
+      <button onclick="sendQuick('Attendance problem')">Attendance</button>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="Type or speak your message..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="Speak">🎤</button>
+      <button class="chat-send" onclick="sendChat()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <p>🎓 AI Campus Assistant &nbsp;·&nbsp; Built for student welfare &nbsp;·&nbsp; Powered by AI</p>
+</footer>
+
+<script src="script.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+</script>
+</body>
+</html>
